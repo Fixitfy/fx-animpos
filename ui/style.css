@@ -1,0 +1,164 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+@font-face {
+    font-family: "western";
+    src: url("/ui/assets/fonts/WesternBangBang-Regular.woff") format("woff");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    outline: 0;
+    appearance: none;
+    border: 0;
+    text-decoration: none;
+    list-style: none;
+    box-sizing: border-box;
+}
+  
+body {
+    transition: all 500ms ease-in-out;
+    font-weight: 400;
+    font-size: 1.0vh;
+    color: white;
+    overflow: hidden;
+    user-select: none;
+    background-image: url(/bg.png);
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
+
+#controls {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    transform: translate(-50%, -50%);
+    gap: 10px;
+    font-weight:400;
+    background: linear-gradient(60deg, rgba(0, 0, 0, 0.9) 4%, rgba(0,0,0,0.0) 25%);
+}
+.key {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2%;
+    height: 3.7%;
+    top: 44%;
+    right: 41.7%;
+    background-color: #000000;
+    color: white;
+    border-radius: 1px;
+    text-align: center;
+    font-weight: 400;
+    font-size: 1.3vh;
+    
+    /* Border Style and Width */
+    border-style: solid;
+    border-width: 3px; /* Kenar genişliğini burada belirleyin */
+    
+    /* Border Image */
+    border-image: linear-gradient(to bottom, #181818, #eee, #181818) 1;
+    border-image-slice: 1;
+}
+
+
+.presseffect {
+    background-color: #a8a4a4;
+    color: black;
+    font-size: 1.3vh;
+    border: 3px solid rgba(255, 255, 255, 0.826);
+}
+
+.key-cont {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    width: 10%;
+    height: 3%;
+    bottom: 10%;
+    left: 0.7%;
+    /* background-color: #a8a4a4; */
+}
+
+.cont-key {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30%;
+    height: 90%;
+    background-color: #000000;
+    color: white;
+    border-radius:1px;
+    text-align: center;
+    font-weight:400;
+    font-size: 1.3vh;
+    border-style: solid;
+    border-width: 3px; /* Kenar genişliğini burada belirleyin */
+    
+    /* Border Image */
+    border-image: linear-gradient(to bottom, #181818, #eee, #181818) 1;
+    border-image-slice: 1;
+}
+
+.cont-line {
+    position: relative;
+    width: 20%;
+    left: 5%;
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(to right, #181818, #bdbcbc, #181818) 100 1%;
+}
+.cont-desc {
+    position: relative;
+    font-size: 1.4vh;
+    bottom: 1%;
+    left: 10%;
+    font-weight:400;
+}
+
+#enter-cont {
+   bottom: 13%;
+}
+#exit-cont {
+   bottom: 16%;
+}
+
+.menu-line {
+    position: absolute;
+    width: 17%;
+    bottom: 2%;
+    left: 0.4%;
+    border-bottom: 1px solid gray;
+}
+
+.mouse-control {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 5%;
+    height: 4%;
+    bottom: 9.7%;
+    left: 11%;
+    color: white;
+    font-size: 2.5vh;
+    gap: 5px;
+    /* background-color: #000000; */
+}
+
+.mouseandmove {
+    position: relative;
+    font-size: 2vh;
+}
+
+#pedIcon {
+    position: absolute;
+    display: grid;
+    font-size: 3vh;
+}
