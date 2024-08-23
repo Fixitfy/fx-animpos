@@ -185,6 +185,7 @@ function animPosition()
                     z = playerCoords.z + maxDistance
                 end
                 SetEntityCoordsNoOffset(playerPed, x, y, z, true, true)
+                SendNUIMessage({action = "presseffect", key = "q"})
                 TriggerServerEvent("fx-animpos:server:syncPlayer", vector3(x, y, z), heading, GetEntityAlpha(playerPed))
             end
 
@@ -194,6 +195,7 @@ function animPosition()
                     z = playerCoords.z - maxDistance
                 end
                 SetEntityCoordsNoOffset(playerPed, x, y, z, true, true)
+                SendNUIMessage({action = "presseffect", key = "e"})
                 TriggerServerEvent("fx-animpos:server:syncPlayer", vector3(x, y, z), heading, GetEntityAlpha(playerPed))
             end
 
@@ -239,11 +241,6 @@ function animPosition()
         animPos = false
     end
 end
-
-
-
-
-
 
 AddEventHandler('onResourceStop', function(resourceName)
     if GetCurrentResourceName() ~= resourceName then
