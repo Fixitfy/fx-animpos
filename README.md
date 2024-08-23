@@ -24,6 +24,10 @@ The **Fixitfy Animation Position Menu** is a powerful tool designed for players 
    - Select VORP or RSG in the `config.lua` file for notifications.
 
 2. **Usage:**
+
    - Enter an animation and then use the `/animpos` command to open the animation menu. Adjust your position, and press ENTER to save the position. The character will then move to the specified location.
 
 With the **Fixitfy Animation Position Menu**, you can place your characters more aesthetically, precisely, and creatively! This tool is the perfect addition to enhance your animation experience on any RedM server.
+
+![Screenshot_627](https://github.com/user-attachments/assets/91b73c44-3958-4f64-80c6-cf435de90f72)
+![Screenshot_622](https://github.com/user-attachments/assets/b3547c4c-7adc-45c8-acaf-f7cbadae977a)
