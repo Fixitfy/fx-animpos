@@ -1,10 +1,11 @@
 Config = {}
 Config.Language = "en"
 Config.Framework = "VORP" -- RSG
+Config.OpenCommand = "animpos"
 Config.Locale = {
     ["en"] = {
         ["active_menu"] = "AnimPos The menu is already open!",
-
+        ["wallError"] = "There is a wall/object here. You cannot move to this location!",
     }
 }
 
@@ -62,12 +63,14 @@ function Notify(data)
     end
 end
 
-function Locale(key,subs)
-    local translate = Config.Locale[Config.Language][key] and Config.Locale[Config.Language][key] or "Config.Locale["..Config.Language.."]["..key.."] doesn't exits"
+function Locale(key, subs)
+    local translate = Config.Locale[Config.Language][key] and Config.Locale[Config.Language][key] or "Config.Locale[" .. Config.Language .. "][" .. key .. "] doesn't exist"
     subs = subs and subs or {}
     for k, v in pairs(subs) do
         local templateToFind = '%${' .. k .. '}'
-        translate = translate:gsub(templateToFind, tostring(v))
+        local safeValue = tostring(v):gsub("%%", "%%%%")
+        translate = translate:gsub(templateToFind, safeValue)
     end
+    translate = tostring(translate):gsub("%%%%", "%%")
     return tostring(translate)
-end
+  end
