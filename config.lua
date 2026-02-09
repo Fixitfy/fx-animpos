@@ -23,39 +23,50 @@ Config.KeyBinds = {
 
 
 Config.HideHud = function()
-    -- exports['fx-hud']:hideHud()
-end
+    if GetResourceState("fx-hud") == "started" then
+      exports["fx-hud"]:hideHud()
+    end
+  end
+  
 Config.ShowHud = function()
-    -- exports['fx-hud']:showHud()
+  if GetResourceState("fx-hud") == "started" then
+    exports["fx-hud"]:showHud()
+  end
 end
-
-local isServer = IsDuplicityVersion()
 
 function Notify(data)
-    local text = data.text
-    local time = data.time
-    local type = data.type
+    local text = data.text or "No message" 
+    local time = data.time or 5000  
+    local type = data.type or "info" 
     local dict = data.dict
     local icon = data.icon
-    local color = data.color
-    local core = Config.Framework
-    if isServer then
-        local src = data.source
-        if core == "RSG" then
-            RSGCore.Functions.Notify(src, text, type)
-        elseif core == "VORP" then
+    local color = data.color or 0
+    local src = data.source
+  
+    if IsDuplicityVersion() then
+        if Framework == "RSG" then
+            text = string.gsub(text, "~.-~", "")
+            TriggerClientEvent('ox_lib:notify', src, { title = text, type = type, duration = time })
+        elseif Framework == "REDEMRP" then
+            text = string.gsub(text, "~.-~", "")
+            TriggerClientEvent("redem_roleplay:Tip", src, text, time)
+        elseif Framework == "VORP" then
             if icon then
-                TriggerClientEvent('vorp:ShowAdvancedRightNotification', src, text,dict,icon,color,time)            
+                TriggerClientEvent('vorp:ShowAdvancedRightNotification', src, text, dict, icon, color, time)
             else
                 TriggerClientEvent("vorp:TipBottom",src, text, time, type)
             end
         end
     else
-        if core == "RSG" then
-            RSGCore.Functions.Notify(text, type)
-        elseif core == "VORP" then
+        if Framework == "RSG" then
+            text = string.gsub(text, "~.-~", "")
+            TriggerEvent('ox_lib:notify', { title = text, type = type, duration = time })
+        elseif Framework == "REDEMRP" then
+            text = string.gsub(text, "~.-~", "")
+            TriggerEvent("redem_roleplay:Tip", text, time)
+        elseif Framework == "VORP" then
             if icon then
-                TriggerEvent("vorp:ShowAdvancedRightNotification", text,dict,icon,color,time)
+                TriggerEvent("vorp:ShowAdvancedRightNotification", text, dict, icon, color, time)
             else
                 TriggerEvent("vorp:TipBottom", text, time, type)
             end
@@ -64,13 +75,13 @@ function Notify(data)
 end
 
 function Locale(key, subs)
-    local translate = Config.Locale[Config.Language][key] and Config.Locale[Config.Language][key] or "Config.Locale[" .. Config.Language .. "][" .. key .. "] doesn't exist"
-    subs = subs and subs or {}
-    for k, v in pairs(subs) do
-        local templateToFind = '%${' .. k .. '}'
-        local safeValue = tostring(v):gsub("%%", "%%%%")
-        translate = translate:gsub(templateToFind, safeValue)
-    end
-    translate = tostring(translate):gsub("%%%%", "%%")
-    return tostring(translate)
+  local translate = Config.Locale[Config.Language][key] and Config.Locale[Config.Language][key] or "Config.Locale[" .. Config.Language .. "][" .. key .. "] doesn't exist"
+  subs = subs and subs or {}
+  for k, v in pairs(subs) do
+      local templateToFind = '%${' .. k .. '}'
+      local safeValue = tostring(v):gsub("%%", "%%%%")
+      translate = translate:gsub(templateToFind, safeValue)
   end
+  translate = tostring(translate):gsub("%%%%", "%%")
+  return tostring(translate)
+end

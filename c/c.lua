@@ -3,21 +3,6 @@ local maxDistance = 0.60
 local originalPos = nil
 local animPos = false
 
-RegisterNetEvent("fx-animpos:client:syncPlayer", function(target, coords, heading, alpha)
-    local targetId = GetPlayerFromServerId(target)
-    local targetPed = GetPlayerPed(targetId)
-    if targetId ~= nil and targetPed ~= nil and PlayerPedId() ~= targetPed then
-        FreezeEntityPosition(targetPed, true)
-        SetEntityCoordsNoOffset(targetPed, coords.x, coords.y, coords.z, true, true)
-        SetEntityHeading(targetPed, heading)
-        if alpha == 0 then
-            ResetEntityAlpha(targetPed)
-        else
-            SetEntityAlpha(targetPed, alpha)
-        end
-    end
-end)
-
 function disableControls()
     DisableAllControlActions(0)
     EnableControlAction(0, 0xD2047988, true) 
@@ -116,6 +101,12 @@ local function _awaitShapeResult(handle)
     return hit == 1, endCoords, surfaceNormal, entityHit
 end
 
+local function isPathClear(ped, targetPos)
+    local pCoords = GetEntityCoords(ped)
+    local rayHandle = StartExpensiveSynchronousShapeTestLosProbe(pCoords.x, pCoords.y, pCoords.z + 0.5, targetPos.x, targetPos.y, targetPos.z + 0.5, 1, ped, 7)
+    local retval, hit, endCoords, surfaceNormal, entityHit = GetShapeTestResult(rayHandle)
+    return hit == 0
+end
 
 local function IsSpotBlockedByMap(ped, pos)
     local z = pos.z + 1           
@@ -150,11 +141,9 @@ function animPosition()
     local playerPed = PlayerPedId()
     originalPos = GetEntityCoords(playerPed)  
     local originalHeading = GetEntityHeading(playerPed) 
-    local playerCoords = originalPos
-    local playerHeading = originalHeading
+    
+    animPos = true
     FreezeEntityPosition(playerPed, true)
-    local posChanged = false
-    animPos = not animPos
     Config.HideHud()
     SendNUIMessage({action = "showUI"})
 
@@ -163,130 +152,128 @@ function animPosition()
             for alpha = 50, 255, 5 do
                 if not animPos then break end
                 SetEntityAlpha(playerPed, alpha, false)
-                Citizen.Wait(7) 
+                Citizen.Wait(15)
             end
             for alpha = 255, 50, -5 do
                 if not animPos then break end
                 SetEntityAlpha(playerPed, alpha, false)
-                Citizen.Wait(7) 
+                Citizen.Wait(15)
             end
         end
-        SetEntityAlpha(playerPed, 255, false)
+        ResetEntityAlpha(playerPed)
     end)
 
-    while true do
+    while animPos do
         disableControls()
-        local tempCoord = GetEntityCoords(PlayerPedId())
-        local x = tempCoord.x
-        local y = tempCoord.y
-        local z = tempCoord.z
-        local heading = GetEntityHeading(playerPed)
-        local dist = GetDistanceBetweenCoords(playerCoords, tempCoord, true)
+        local currentCoords = GetEntityCoords(playerPed)
         local forwardVector = GetEntityForwardVector(playerPed)
         local rightVector = vector3(forwardVector.y, -forwardVector.x, 0)
 
-        if dist <= maxDistance then
-            if IsDisabledControlJustPressed(0, Config.KeyBinds["W"]) then 
-                x = x + forwardVector.x * 0.1
-                y = y + forwardVector.y * 0.1
-                SetEntityCoordsNoOffset(playerPed, x, y, z, true, true)
-                SendNUIMessage({action = "presseffect", key = "w"})
-                TriggerServerEvent("fx-animpos:server:syncPlayer", vector3(x, y, z), heading, GetEntityAlpha(playerPed))
-            end
-
-            if IsDisabledControlJustPressed(0, Config.KeyBinds["S"]) then 
-                x = x - forwardVector.x * 0.1
-                y = y - forwardVector.y * 0.1
-                SetEntityCoordsNoOffset(playerPed, x, y, z, true, true)
-                SendNUIMessage({action = "presseffect", key = "s"})
-                TriggerServerEvent("fx-animpos:server:syncPlayer", vector3(x, y, z), heading, GetEntityAlpha(playerPed))
-            end
-
-            if IsDisabledControlJustPressed(0, Config.KeyBinds["A"]) then 
-                x = x - rightVector.x * 0.1
-                y = y - rightVector.y * 0.1
-                SetEntityCoordsNoOffset(playerPed, x, y, z, true, true)
-                SendNUIMessage({action = "presseffect", key = "a"})
-                TriggerServerEvent("fx-animpos:server:syncPlayer", vector3(x, y, z), heading, GetEntityAlpha(playerPed))
-            end
-
-            if IsDisabledControlJustPressed(0, Config.KeyBinds["D"]) then 
-                x = x + rightVector.x * 0.1
-                y = y + rightVector.y * 0.1
-                SetEntityCoordsNoOffset(playerPed, x, y, z, true, true)
-                SendNUIMessage({action = "presseffect", key = "d"})
-                TriggerServerEvent("fx-animpos:server:syncPlayer", vector3(x, y, z), heading, GetEntityAlpha(playerPed))
-            end
-
-            if IsDisabledControlJustPressed(0, Config.KeyBinds["Q"]) then
-                z = z + 0.1
-                if z > playerCoords.z + maxDistance then
-                    z = playerCoords.z + maxDistance
+        local function attemptMove(moveVec)
+            local targetPos = currentCoords + moveVec
+            
+            if #(targetPos - originalPos) <= 5.0 then 
+                if isPathClear(playerPed, targetPos) then
+                    SetEntityCoordsNoOffset(playerPed, targetPos.x, targetPos.y, targetPos.z, true, true, true)
+                    
+                    FreezeEntityPosition(playerPed, false)
+                    Citizen.Wait(2) 
+                    
+                    if HasEntityCollidedWithAnything(playerPed) then
+                        SetEntityCoordsNoOffset(playerPed, currentCoords.x, currentCoords.y, currentCoords.z, true, true, true)
+                    else
+                        TriggerServerEvent("fx-animpos:server:syncPlayer", targetPos, GetEntityHeading(playerPed), GetEntityAlpha(playerPed))
+                    end
+                    FreezeEntityPosition(playerPed, true)
                 end
-                SetEntityCoordsNoOffset(playerPed, x, y, z, true, true)
-                SendNUIMessage({action = "presseffect", key = "q"})
-                TriggerServerEvent("fx-animpos:server:syncPlayer", vector3(x, y, z), heading, GetEntityAlpha(playerPed))
             end
+        end
 
-            if IsDisabledControlJustPressed(0, Config.KeyBinds["E"]) then
-                z = z - 0.1
-                if z < playerCoords.z - maxDistance then
-                    z = playerCoords.z - maxDistance
-                end
-                SetEntityCoordsNoOffset(playerPed, x, y, z, true, true)
-                SendNUIMessage({action = "presseffect", key = "e"})
-                TriggerServerEvent("fx-animpos:server:syncPlayer", vector3(x, y, z), heading, GetEntityAlpha(playerPed))
-            end
+        if IsDisabledControlJustPressed(0, Config.KeyBinds["W"]) then 
+            attemptMove(forwardVector * 0.1)
+            SendNUIMessage({action = "presseffect", key = "w"})
+        elseif IsDisabledControlJustPressed(0, Config.KeyBinds["S"]) then 
+            attemptMove(forwardVector * -0.1)
+            SendNUIMessage({action = "presseffect", key = "s"})
+        elseif IsDisabledControlJustPressed(0, Config.KeyBinds["A"]) then 
+            attemptMove(rightVector * -0.1)
+            SendNUIMessage({action = "presseffect", key = "a"})
+        elseif IsDisabledControlJustPressed(0, Config.KeyBinds["D"]) then 
+            attemptMove(rightVector * 0.1)
+            SendNUIMessage({action = "presseffect", key = "d"})
+        elseif IsDisabledControlJustPressed(0, Config.KeyBinds["Q"]) then
+            attemptMove(vector3(0, 0, 0.05))
+            SendNUIMessage({action = "presseffect", key = "q"})
+        elseif IsDisabledControlJustPressed(0, Config.KeyBinds["E"]) then
+            attemptMove(vector3(0, 0, -0.05))
+            SendNUIMessage({action = "presseffect", key = "e"})
+        end
 
-            if IsDisabledControlJustPressed(0, Config.KeyBinds["ENTER"]) then
-                playerCoords  = vector3(x, y, z)
-                playerHeading = heading
-                
-                if IsSpotBlockedByMap(playerPed, playerCoords) then
-                    Notify({ text = Locale("wallError"), time = 3000, type = "error" })
-                    SetEntityCoordsNoOffset(playerPed, originalPos.x, originalPos.y, originalPos.z, true, true)
-                    SetEntityHeading(playerPed, originalHeading)
-                end
-                
-                TriggerServerEvent("fx-animpos:server:syncPlayer", playerCoords, playerHeading, 0)
-                SendNUIMessage({action = "hideUI"})
-                Config.ShowHud()
-                posChanged = false
-                break
-            end
+        if IsDisabledControlJustPressed(0, Config.KeyBinds["ENTER"]) then
+            animPos = false
+            ResetEntityAlpha(playerPed)
+            TriggerServerEvent("fx-animpos:server:syncPlayer", GetEntityCoords(playerPed), GetEntityHeading(playerPed), 255)
+            break
+        end
 
-            if IsDisabledControlJustPressed(0, Config.KeyBinds["ESC"]) then
-                posChanged = false
-                SendNUIMessage({action = "hideUI"})
-                Config.ShowHud() 
-                SetEntityCoordsNoOffset(playerPed, originalPos.x, originalPos.y, originalPos.z, true, true)
-                SetEntityHeading(playerPed, originalHeading) 
-                break
-            end
-        else
-            playerCoords = vector3(originalPos.x, originalPos.y, originalPos.z) 
-            playerHeading = heading 
-            SetEntityCoordsNoOffset(PlayerPedId(), originalPos.x, originalPos.y, originalPos.z, true, true)
-            TriggerServerEvent("fx-animpos:server:syncPlayer", playerCoords, playerHeading, 0)
+        if IsDisabledControlJustPressed(0, Config.KeyBinds["ESC"]) then
+            animPos = false
+            SetEntityCoords(playerPed, originalPos.x, originalPos.y, originalPos.z, true, false, false, true) 
+            SetEntityHeading(playerPed, originalHeading) 
+            ResetEntityAlpha(playerPed)
+            TriggerServerEvent("fx-animpos:server:syncPlayer", originalPos, originalHeading, 255)
+            break
         end
 
         Wait(1)
     end
 
+    -- Cleanup
+    animPos = false
     FreezeEntityPosition(playerPed, false)
-
-    if not posChanged then
-        animPos = false
-    end
+    ResetEntityAlpha(playerPed)
+    SetNuiFocus(false, false)
+    SendNUIMessage({action = "hideUI"})
+    Config.ShowHud() 
 end
 
-AddEventHandler('onResourceStop', function(resourceName)
-    if GetCurrentResourceName() ~= resourceName then
-        return
+RegisterNetEvent("fx-animpos:client:syncPlayer", function(target, coords, heading, alpha)
+    if target == GetPlayerServerId(PlayerId()) then return end
+
+    local timeout = GetGameTimer() + 2000
+    local targetId = -1
+    local targetPed = 0
+
+    while GetGameTimer() < timeout do
+        targetId = GetPlayerFromServerId(target)
+        if targetId ~= -1 then
+            targetPed = GetPlayerPed(targetId)
+            if DoesEntityExist(targetPed) then break end
+        end
+        Wait(0)
     end
-    posChanged = false
-    ResetEntityAlpha(PlayerPedId())
-    FreezeEntityPosition(PlayerPedId(), false)
-    SendNUIMessage({action = "hideUI"})
+
+    if not DoesEntityExist(targetPed) then return end
+
+    -- FreezeEntityPosition(targetPed, false)
+    SetEntityCoords(targetPed, coords.x, coords.y, coords.z, false, false, false, false)
+    SetEntityHeading(targetPed, heading)
+
+    if alpha == 0 then
+        ResetEntityAlpha(targetPed)
+    else
+        SetEntityAlpha(targetPed, alpha)
+    end
+
+    -- FreezeEntityPosition(targetPed, true)
+end)
+
+AddEventHandler('onResourceStop', function(resourceName)
+    if GetCurrentResourceName() ~= resourceName then return end
+    animPos = false
+    local ped = PlayerPedId()
+    ResetEntityAlpha(ped)
+    FreezeEntityPosition(ped, false)
+    SetNuiFocus(false, false)
     Config.ShowHud() 
 end)
